@@ -125,37 +125,37 @@ bool openBox(uint32_t y, uint32_t x)
 
     print(box);
 
-    // Початкова матриця state від box
+    // Initial matrix state from the box
     const auto state = box.getState();
     const int boxSize = y * x;
 
-    // Матриця допустимих конфігурацій для матриці box з розміром boxSize...boxSize + 1
+    // Matrix of valid configurations for the box matrix of size boxSize...boxSize + 1
     std::vector<std::vector<int>> matrix(boxSize, std::vector<int>(boxSize + 1, 0));
 
     /*
-    * Формула: sum(a,b) = (i==a | j==b),
-    * де допустимі конфігурації дорівнюють L(a,b) = XOR state(i,j);
+    * Formula: sum(a,b) = (i==a | j==b),
+    * where valid configurations are equal to L(a,b) = XOR state(i,j);
     */
 
-    // Побудова матриці matrix та запис початкової матриці 
+    // Constructing the matrix and storing the initial box matrix
     for (uint32_t i = 0; i < y; i++)
     {
         for (uint32_t j = 0; j < x; j++)
         {
 
-            //Індекс для матриці matrix
+            // Index for the matrix
             int p = i * x + j;
 
-            //Введення в матрицю matrix початкову матрицю box
+            // Insert the initial box matrix into the system matrix
             matrix[p][boxSize] = state[i][j] ? 1 : 0;
 
-            // Позначення ефектів toggle, як допустимі конфігурації для клітинок j
+            // Marking the effects of toggle as valid configurations for column cells j
             for (uint32_t a = 0; a < y; a++)
             {
-                int q = a * x + j; 
+                int q = a * x + j;
                 matrix[p][q] = 1;
             }
-            // Позначення ефектів toggle, як допустимі конфігурації для клітинок i
+            // Marking the effects of toggle as valid configurations for row cells i
             for (uint32_t b = 0; b < x; b++)
             {
                 int q = i * x + b;
@@ -164,14 +164,14 @@ bool openBox(uint32_t y, uint32_t x)
         }
     }
 
-    //Вирішення через Gauss-Jordan елімінації по модулю два.
+    // Solving using Gauss-Jordan elimination modulo two.
 
     int row = 0;
     std::vector<int> index(boxSize, -1);
     for (int col = 0; col < boxSize && row < boxSize; col++)
     {
         int pivot = -1;
-        //Знаходження в стовпцях 1, як опорне значення.
+        // Finding a 1 in the column to use as a pivot value.
         for (int r = row; r < boxSize; r++)
         {
             if (matrix[r][col] == 1)
@@ -192,21 +192,21 @@ bool openBox(uint32_t y, uint32_t x)
         }
 
         index[col] = row;
-        // Обнулення стовпець col для рядків
+        // Zeroing out column col for all rows
         for (int r = 0; r < boxSize; r++)
         {
             if (r != row && matrix[r][col] == 1)
             {
                 for (int c = col; c <= boxSize; c++)
                 {
-                    //Використовуємо XOR, як віднімання 
+                    // Using XOR as subtraction 
                     matrix[r][c] ^= matrix[row][c];
                 }
             }
         }
         row++;
     }
-    // Перевірка на сумісність системи. Якщо по сусідству 1 в рядку не має одиниць. 
+    // Checking system consistency. If a row has no ones except for the last column, there is no solution.
     for (int r = row; r < boxSize; r++)
     {
         if (matrix[r][boxSize] == 1)
@@ -216,7 +216,7 @@ bool openBox(uint32_t y, uint32_t x)
             return true;
         }
     }
-    // Задання значень для вільних зміних 0
+    // Assigning 0 to free variables
     std::vector<int> ans(boxSize, 0);
     for (int col = 0; col < boxSize; col++)
     {
@@ -224,12 +224,12 @@ bool openBox(uint32_t y, uint32_t x)
         {
             ans[col] = matrix[index[col]][boxSize];
         }
-        else 
+        else
         {
             ans[col] = 0;
         }
     }
-    // Використання знайденої матриці, заповненою правильною послідовнстю для toggle операцій.
+    // Using the found matrix, correctly ordered for toggle operations.
     for (int q = 0; q < boxSize; q++)
     {
         if (ans[q] == 1)
@@ -240,7 +240,7 @@ bool openBox(uint32_t y, uint32_t x)
         }
     }
 
-    std::cout << "Solvet SecureBox: \n";
+    std::cout << "Solved SecureBox: \n";
     print(box);
 
     return box.isLocked();
